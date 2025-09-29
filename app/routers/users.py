@@ -1,3 +1,5 @@
+from typing import  Annotated
+
 from fastapi import APIRouter,Depends,status
 from fastapi.exceptions import HTTPException
 
@@ -6,10 +8,13 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 
 
-from app.schemas.user import UserCreate,UserResponse,VerificationCode
+from app.schemas.user import UserCreate,UserResponse,VerificationCode,UserLogin
 from app.services.user_service import create_user
 from app.dependencies import get_db
+from app.utils.password import verify_password
 from app.utils.email import send_verification_code_to_email
+from app.core.security import generate_token
+
 
 from app.services.user_service import create_user
 router = APIRouter(
@@ -39,3 +44,19 @@ async def create_new_user(verification_data:VerificationCode,db: Session = Depen
     db.commit()
 
     return user
+
+@router.post("/login")
+async def login_api(user_data:UserLogin,db:Annotated[Session,Depends(get_db)]):
+    user = db.query(User).filter(User.email == user_data.email,User.is_verified == True).first()
+
+    if user:
+        is_valid = verify_password(user_data.password,user.hash_password)
+
+        if is_valid:
+            return {"Token":generate_token(user)}
+        else:
+            raise HTTPException(status_code=401,detail="password xato")
+    
+    else:
+        raise HTTPException(status_code=400,detail="Bunday user topilmadi")
+        
