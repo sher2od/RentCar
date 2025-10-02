@@ -19,7 +19,7 @@ from app.core.security import generate_token
 from app.services.user_service import create_user
 router = APIRouter(
     prefix="/users",
-    tags=["Users"]
+    tags=["Users Endpoints"]
 )
 
 @router.post("/",response_model=UserResponse)
@@ -38,7 +38,7 @@ async def create_new_user(verification_data:VerificationCode,db: Session = Depen
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="user does not exists")
     
     if user.verification_code != verification_data.code:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="invalid verification code")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="invalid verification code") 
     
     user.is_verified = True
     db.commit()
